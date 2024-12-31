@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -8,15 +9,27 @@ const router = express.Router();
 // Secret key for JWT
 const JWT_SECRET = 'your_jwt_secret'; // Replace with a secure key from .env
 
+// User Schema (ensure this file is correct, for example, in 'user.models.js')
+// const userSchema = new mongoose.Schema({
+//     username: { type: String, required: true, unique: true, lowercase: true },
+//     email: { type: String, required: true, unique: true, lowercase: true },
+//     password: { type: String, required: true }
+// }, { timestamps: true });
+// export const User = mongoose.model('User', userSchema);
+
 /**
  * User Sign-Up
  */
 router.post('/signup', async (req, res) => {
-    const { name, email, password } = req.body;
+    const { username, email, password } = req.body;
+
+    if (!email) {
+        return res.status(400).json({ message: 'Email is required' });
+    }
 
     try {
-        // Check if the user already exists
-        const userExists = await User.findOne({ email });
+        // Check if the user already exists (case insensitive)
+        const userExists = await User.findOne({ email: email.toLowerCase() });
         if (userExists) {
             return res.status(400).json({ message: 'Email already in use' });
         }
@@ -26,7 +39,7 @@ router.post('/signup', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, salt);
 
         // Create new user
-        const newUser = new User({ name, email, password: hashedPassword });
+        const newUser = new User({ username, email: email.toLowerCase(), password: hashedPassword });
         await newUser.save();
 
         res.status(201).json({ message: 'User registered successfully', userId: newUser._id });
@@ -34,6 +47,7 @@ router.post('/signup', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
 
 /**
  * User Login
@@ -43,7 +57,7 @@ router.post('/login', async (req, res) => {
 
     try {
         // Check if the user exists
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email: email.toLowerCase() });
         if (!user) {
             return res.status(400).json({ message: 'Invalid email or password' });
         }
@@ -91,7 +105,7 @@ router.get('/profile', async (req, res) => {
  */
 router.put('/profile', async (req, res) => {
     const token = req.headers.authorization?.split(' ')[1];
-    const { name, email, password } = req.body;
+    const { username, email, password } = req.body;
 
     try {
         if (!token) {
@@ -106,8 +120,8 @@ router.put('/profile', async (req, res) => {
         }
 
         // Update fields
-        if (name) user.name = name;
-        if (email) user.email = email;
+        if (username) user.username = username;
+        if (email) user.email = email.toLowerCase();  // Ensure email is stored in lowercase
         if (password) {
             const salt = await bcrypt.genSalt(10);
             user.password = await bcrypt.hash(password, salt);
@@ -145,4 +159,4 @@ router.delete('/profile', async (req, res) => {
     }
 });
 
-export default router;  // Use export default for ES Modules
+export default router;

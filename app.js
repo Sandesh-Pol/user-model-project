@@ -7,8 +7,13 @@ import orderRoutes from './routes/orderRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import userRoutes from './routes/userRoures.js';
 
+import dotenv from 'dotenv';
+dotenv.config();
+
 const app = express();
 app.use(bodyParser.json());
+
+app.use(express.json()); // Built-in middleware for parsing JSON
 
 // Routes
 app.use('/categories', categoryRoutes);

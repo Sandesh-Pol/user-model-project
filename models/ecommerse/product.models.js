@@ -19,9 +19,9 @@ const productSchema = new mongoose.Schema({
     stock: {
         type: Number
     },
-    category: {  // Fixed spelling here (category, not catogory)
+    category: { 
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Category",  // Fixed the reference name from "Caregory" to "Category"
+        ref: "Category",  
         required: true,
     },
     owner: {
